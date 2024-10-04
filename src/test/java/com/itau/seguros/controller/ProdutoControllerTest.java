@@ -42,7 +42,7 @@ class ProdutoControllerTest {
         produto.setPrecoBase(new BigDecimal("100.00"));
         produto.setPrecoTarifado(new BigDecimal("103.20"));
 
-        Mockito.when(produtoService.salvarProduto(Mockito.any(Produto.class))).thenReturn(produto);
+        Mockito.when(produtoService.salvarProduto(Mockito.any(ProdutoRequestDTO.class))).thenReturn(produto);
 
         ProdutoRequestDTO requestDTO = new ProdutoRequestDTO();
         requestDTO.setNome("Seguro de Vida");

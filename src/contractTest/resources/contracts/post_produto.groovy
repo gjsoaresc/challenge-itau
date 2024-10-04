@@ -8,7 +8,7 @@ Contract.make {
         method 'POST'
         url '/api/produtos'
         body([
-                nome: "Seguro de Vida",
+                nome: $(regex('Seguro de Vida [a-f0-9]{8}')),
                 categoria: "VIDA",
                 precoBase: 100.00
         ])
@@ -20,7 +20,7 @@ Contract.make {
         status 200
         body([
                 id: $(regex(uuid())),
-                nome: $(regex('Seguro de Vida( Atualizado)?')),
+                nome: $(regex('Seguro de Vida [a-f0-9]{8}( Atualizado)?')),
                 categoria: "VIDA",
                 precoBase: 100.00,
                 precoTarifado: 103.20

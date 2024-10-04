@@ -1,5 +1,6 @@
 package com.itau.seguros.service;
 
+import com.itau.seguros.dto.ProdutoRequestDTO;
 import com.itau.seguros.model.Produto;
 import com.itau.seguros.repository.ProdutoRepository;
 import com.itau.seguros.service.calculadora.CalculadoraImpostos;
@@ -7,6 +8,7 @@ import com.itau.seguros.service.calculadora.CalculadoraImpostosFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
@@ -15,6 +17,7 @@ import java.util.UUID;
 
 @Service
 public class ProdutoService {
+
     private static final Logger logger = LoggerFactory.getLogger(ProdutoService.class);
 
     @Autowired
@@ -23,20 +26,11 @@ public class ProdutoService {
     @Autowired
     private CalculadoraImpostosFactory calculadoraImpostosFactory;
 
-    public Produto salvarProduto(Produto produto) {
-        if (produto == null) {
-            throw new IllegalArgumentException("Produto não pode ser nulo");
-        }
+    public Produto salvarProduto(ProdutoRequestDTO produtoRequestDTO) {
+        verificarDuplicidade(produtoRequestDTO.getNome());
 
-        if (produtoRepository.findByNome(produto.getNome()).isPresent()) {
-            logger.warn("Tentativa de criar produto duplicado: Nome={}", produto.getNome());
-            throw new IllegalArgumentException("Produto com o nome '" + produto.getNome() + "' já existe.");
-        }
-
-        CalculadoraImpostos calculadora = calculadoraImpostosFactory.getCalculadora(produto.getCategoria());
-
-        BigDecimal precoTarifado = calculadora.calcular(produto.getPrecoBase());
-        produto.setPrecoTarifado(precoTarifado);
+        Produto produto = new Produto();
+        aplicarValoresECalcularPreco(produto, produtoRequestDTO);
 
         return produtoRepository.save(produto);
     }
@@ -45,26 +39,39 @@ public class ProdutoService {
         return produtoRepository.findById(id);
     }
 
-    public Produto atualizarProduto(UUID id, Produto produtoAtualizado) {
-        Optional<Produto> produtoExistente = buscarProdutoPorId(id);
-        if (produtoExistente.isPresent()) {
-            Produto produto = produtoExistente.get();
+    public Produto atualizarProduto(UUID id, ProdutoRequestDTO produtoRequestDTO) {
+        Produto produtoExistente = buscarProdutoPorId(id)
+                .orElseThrow(() -> new IllegalArgumentException("Produto com ID " + id + " não encontrado"));
 
-            Optional<Produto> produtoComMesmoNome = produtoRepository.findByNome(produtoAtualizado.getNome());
-            if (produtoComMesmoNome.isPresent() && !produtoComMesmoNome.get().getId().equals(id)) {
-                logger.warn("Produto com o nome '{}' já existe", produtoAtualizado.getNome());
-                throw new IllegalArgumentException("Produto com o nome '" + produtoAtualizado.getNome() + "' já existe.");
-            }
+        verificarDuplicidade(produtoRequestDTO.getNome(), id);
 
-            produto.setNome(produtoAtualizado.getNome());
-            produto.setCategoria(produtoAtualizado.getCategoria());
-            produto.setPrecoBase(produtoAtualizado.getPrecoBase());
-            BigDecimal precoTarifado = calculadoraImpostosFactory
-                    .getCalculadora(produto.getCategoria())
-                    .calcular(produto.getPrecoBase());
-            produto.setPrecoTarifado(precoTarifado);
-            return produtoRepository.save(produto);
+        aplicarValoresECalcularPreco(produtoExistente, produtoRequestDTO);
+
+        return produtoRepository.save(produtoExistente);
+    }
+
+    private void verificarDuplicidade(String nome) {
+        if (produtoRepository.findByNome(nome).isPresent()) {
+            logger.warn("Tentativa de criar produto duplicado: Nome={}", nome);
+            throw new DataIntegrityViolationException("Produto com o nome '" + nome + "' já existe.");
         }
-        throw new RuntimeException("Produto não encontrado");
+    }
+
+    private void verificarDuplicidade(String nome, UUID id) {
+        Optional<Produto> produtoComMesmoNome = produtoRepository.findByNome(nome);
+        if (produtoComMesmoNome.isPresent() && !produtoComMesmoNome.get().getId().equals(id)) {
+            logger.warn("Produto com o nome '{}' já existe", nome);
+            throw new DataIntegrityViolationException("Produto com o nome '" + nome + "' já existe.");
+        }
+    }
+
+    private void aplicarValoresECalcularPreco(Produto produto, ProdutoRequestDTO produtoRequestDTO) {
+        produto.setNome(produtoRequestDTO.getNome());
+        produto.setCategoria(produtoRequestDTO.getCategoria());
+        produto.setPrecoBase(produtoRequestDTO.getPrecoBase());
+
+        CalculadoraImpostos calculadora = calculadoraImpostosFactory.getCalculadora(produto.getCategoria());
+        BigDecimal precoTarifado = calculadora.calcular(produto.getPrecoBase());
+        produto.setPrecoTarifado(precoTarifado);
     }
 }
