@@ -13,6 +13,8 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.support.DefaultMessageSourceResolvable;
 import org.springframework.http.ResponseEntity;
@@ -26,6 +28,7 @@ import java.util.UUID;
 @RequestMapping("/api/produtos")
 @Tag(name = "Produtos", description = "API para gerenciamento de produtos de seguros")
 public class ProdutoController {
+    private static final Logger logger = LoggerFactory.getLogger(ProdutoController.class);
 
     @Autowired
     private ProdutoService produtoService;
@@ -41,7 +44,12 @@ public class ProdutoController {
             @Valid @RequestBody @Parameter(description = "Dados para criação do produto") ProdutoRequestDTO produtoRequestDTO,
             BindingResult result
     ) {
+        logger.info("Recebida solicitação de criação de produto: Nome={}, Categoria={}",
+                produtoRequestDTO.getNome(), produtoRequestDTO.getCategoria());
+
         if (result.hasErrors()) {
+            logger.warn("Erros de validação encontrados na criação do produto: {}",
+                    result.getFieldErrors().stream().map(DefaultMessageSourceResolvable::getDefaultMessage).toArray());
             return ResponseEntity.badRequest().body(result.getFieldErrors().stream()
                     .map(DefaultMessageSourceResolvable::getDefaultMessage)
                     .toArray());
@@ -58,7 +66,13 @@ public class ProdutoController {
         produto.setPrecoBase(produtoRequestDTO.getPrecoBase());
 
         try {
+            logger.info("Salvando produto: Nome={}, Categoria={}, Preço Base={}",
+                    produto.getNome(), produto.getCategoria(), produto.getPrecoBase());
+
             Produto produtoSalvo = produtoService.salvarProduto(produto);
+
+            logger.info("Produto salvo com sucesso: ID={}, Nome={}, Preço Tarifado={}",
+                    produtoSalvo.getId(), produtoSalvo.getNome(), produtoSalvo.getPrecoTarifado());
 
             ProdutoResponseDTO responseDTO = new ProdutoResponseDTO(
                     produtoSalvo.getId(),
@@ -70,6 +84,7 @@ public class ProdutoController {
 
             return ResponseEntity.ok(responseDTO);
         } catch (Exception e) {
+            logger.error("Erro ao salvar o produto: {}", e.getMessage());
             return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
@@ -84,9 +99,14 @@ public class ProdutoController {
     public ResponseEntity<ProdutoResponseDTO> buscarProduto(
             @PathVariable @Parameter(description = "ID do produto a ser buscado", example = "670b628d-a5a8-486f-80ed-aea8ac91fd81") UUID id
     ) {
+        logger.info("Recebida solicitação de busca do produto com ID={}", id);
+
         Optional<Produto> produtoOpt = produtoService.buscarProdutoPorId(id);
         if (produtoOpt.isPresent()) {
             Produto produto = produtoOpt.get();
+            logger.info("Produto encontrado: ID={}, Nome={}, Categoria={}",
+                    produto.getId(), produto.getNome(), produto.getCategoria());
+
             ProdutoResponseDTO responseDTO = new ProdutoResponseDTO(
                     produto.getId(),
                     produto.getNome(),
@@ -96,6 +116,7 @@ public class ProdutoController {
             );
             return ResponseEntity.ok(responseDTO);
         }
+        logger.warn("Produto com ID={} não encontrado", id);
         return ResponseEntity.notFound().build();
     }
 
@@ -110,7 +131,11 @@ public class ProdutoController {
             @PathVariable @Parameter(description = "ID do produto a ser atualizado") UUID id,
             @Valid @RequestBody @Parameter(description = "Novos dados para o produto") ProdutoRequestDTO produtoRequestDTO, BindingResult result
     ) {
+        logger.info("Recebida solicitação de atualização do produto com ID={}", id);
+
         if (result.hasErrors()) {
+            logger.warn("Erros de validação encontrados na atualização do produto: {}",
+                    result.getFieldErrors().stream().map(DefaultMessageSourceResolvable::getDefaultMessage).toArray());
             return ResponseEntity.badRequest().body(result.getFieldErrors().stream()
                     .map(DefaultMessageSourceResolvable::getDefaultMessage)
                     .toArray());
@@ -118,10 +143,14 @@ public class ProdutoController {
 
         Optional<Produto> produtoExistente = produtoService.buscarProdutoPorId(id);
         if (produtoExistente.isEmpty()) {
+            logger.warn("Produto com ID={} não encontrado para atualização", id);
             return ResponseEntity.notFound().build();
         }
 
         Produto produtoAtualizado = produtoExistente.get();
+        logger.info("Atualizando produto: ID={}, Nome={}, Categoria={}",
+                produtoAtualizado.getId(), produtoRequestDTO.getNome(), produtoRequestDTO.getCategoria());
+
         return getResponseEntity(produtoRequestDTO, produtoAtualizado);
     }
 }

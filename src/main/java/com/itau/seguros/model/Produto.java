@@ -1,6 +1,7 @@
 package com.itau.seguros.model;
 
 import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.math.BigDecimal;
@@ -12,7 +13,9 @@ public class Produto {
     @Id
     private UUID id;
 
+    @Indexed(unique = true)
     private String nome;
+
     private String categoria;
     private BigDecimal precoBase;
     private BigDecimal precoTarifado;
