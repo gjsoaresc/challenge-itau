@@ -23,7 +23,8 @@ public class ProdutoIntegrationTest {
     @Test
     public void deveCriarProdutoComSucesso() {
         ProdutoRequestDTO requestDTO = new ProdutoRequestDTO();
-        requestDTO.setNome("Seguro Auto");
+        UUID uuid = UUID.randomUUID();
+        requestDTO.setNome("Seguro Auto " + uuid);
         requestDTO.setCategoria("AUTO");
         requestDTO.setPrecoBase(new BigDecimal("200.00"));
 
@@ -32,14 +33,15 @@ public class ProdutoIntegrationTest {
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
         Produto produtoCriado = response.getBody();
         assertThat(produtoCriado).isNotNull();
-        assertThat(produtoCriado.getNome()).isEqualTo("Seguro Auto");
+        assertThat(produtoCriado.getNome()).isEqualTo("Seguro Auto " + uuid);
         assertThat(produtoCriado.getPrecoTarifado()).isGreaterThan(new BigDecimal("200.00"));
     }
 
     @Test
     public void deveBuscarProdutoPorId() {
         ProdutoRequestDTO requestDTO = new ProdutoRequestDTO();
-        requestDTO.setNome("Seguro Auto");
+        UUID uuid = UUID.randomUUID();
+        requestDTO.setNome("Seguro Auto " + uuid);
         requestDTO.setCategoria("AUTO");
         requestDTO.setPrecoBase(new BigDecimal("200.00"));
 
@@ -53,14 +55,15 @@ public class ProdutoIntegrationTest {
         assertThat(getResponse.getStatusCode()).isEqualTo(HttpStatus.OK);
         Produto produtoBuscado = getResponse.getBody();
         assertThat(produtoBuscado).isNotNull();
-        assertThat(produtoBuscado.getNome()).isEqualTo("Seguro Auto");
+        assertThat(produtoBuscado.getNome()).isEqualTo("Seguro Auto " + uuid);
         assertThat(produtoBuscado.getPrecoTarifado()).isGreaterThan(new BigDecimal("200.00"));
     }
 
     @Test
     public void deveAtualizarProduto() {
         ProdutoRequestDTO requestDTO = new ProdutoRequestDTO();
-        requestDTO.setNome("Seguro Residencial");
+        UUID uuid = UUID.randomUUID();
+        requestDTO.setNome("Seguro Residencial " + uuid);
         requestDTO.setCategoria("RESIDENCIAL");
         requestDTO.setPrecoBase(new BigDecimal("300.00"));
 
@@ -70,7 +73,7 @@ public class ProdutoIntegrationTest {
         UUID produtoId = produtoCriado.getId();
 
         ProdutoRequestDTO requestAtualizacao = new ProdutoRequestDTO();
-        requestAtualizacao.setNome("Seguro Residencial Atualizado");
+        requestAtualizacao.setNome("Seguro Residencial " + uuid + " Atual");
         requestAtualizacao.setCategoria("RESIDENCIAL");
         requestAtualizacao.setPrecoBase(new BigDecimal("400.00"));
 
@@ -80,7 +83,7 @@ public class ProdutoIntegrationTest {
         Produto produtoAtualizado = getResponse.getBody();
 
         assertThat(produtoAtualizado).isNotNull();
-        assertThat(produtoAtualizado.getNome()).isEqualTo("Seguro Residencial Atualizado");
+        assertThat(produtoAtualizado.getNome()).isEqualTo("Seguro Residencial " + uuid + " Atual");
         assertThat(produtoAtualizado.getPrecoBase()).isEqualTo(new BigDecimal("400.00"));
     }
 }

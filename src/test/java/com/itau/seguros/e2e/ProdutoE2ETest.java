@@ -6,6 +6,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.server.LocalServerPort;
+import java.util.UUID;
 import static io.restassured.RestAssured.given;
 import static org.hamcrest.Matchers.equalTo;
 
@@ -23,7 +24,8 @@ public class ProdutoE2ETest {
 
     @Test
     void deveCriarEConsultarProduto() {
-        String produtoJson = "{ \"nome\": \"Seguro Auto\", \"categoria\": \"AUTO\", \"precoBase\": 200.00 }";
+        String nomeProduto = "Seguro Auto " + UUID.randomUUID();
+        String produtoJson = "{ \"nome\": \"" + nomeProduto + "\", \"categoria\": \"AUTO\", \"precoBase\": 200.00 }";
 
         produtoId = given()
                 .contentType(ContentType.JSON)
@@ -39,7 +41,7 @@ public class ProdutoE2ETest {
                 .get("/api/produtos/{id}", produtoId)
                 .then()
                 .statusCode(200)
-                .body("nome", equalTo("Seguro Auto"))
+                .body("nome", equalTo(nomeProduto))
                 .body("precoTarifado", equalTo(221.00f));
     }
 }
