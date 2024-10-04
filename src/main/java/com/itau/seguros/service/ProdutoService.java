@@ -25,67 +25,46 @@ public class ProdutoService {
 
     public Produto salvarProduto(Produto produto) {
         if (produto == null) {
-            logger.error("Tentativa de salvar um produto nulo");
             throw new IllegalArgumentException("Produto não pode ser nulo");
         }
 
-        logger.info("Salvando novo produto: Nome={}, Categoria={}", produto.getNome(), produto.getCategoria());
+        if (produtoRepository.findByNome(produto.getNome()).isPresent()) {
+            logger.warn("Tentativa de criar produto duplicado: Nome={}", produto.getNome());
+            throw new IllegalArgumentException("Produto com o nome '" + produto.getNome() + "' já existe.");
+        }
 
         CalculadoraImpostos calculadora = calculadoraImpostosFactory.getCalculadora(produto.getCategoria());
 
         BigDecimal precoTarifado = calculadora.calcular(produto.getPrecoBase());
         produto.setPrecoTarifado(precoTarifado);
 
-        Produto produtoSalvo = produtoRepository.save(produto);
-        logger.info("Produto salvo com sucesso: ID={}, Nome={}, Preço Base={}, Preço Tarifado={}",
-                produtoSalvo.getId(), produtoSalvo.getNome(), produtoSalvo.getPrecoBase(), produtoSalvo.getPrecoTarifado());
-
-        return produtoSalvo;
+        return produtoRepository.save(produto);
     }
 
     public Optional<Produto> buscarProdutoPorId(UUID id) {
-        logger.info("Buscando produto com ID={}", id);
-        Optional<Produto> produto = produtoRepository.findById(id);
-
-        if (produto.isPresent()) {
-            logger.info("Produto encontrado: ID={}, Nome={}", produto.get().getId(), produto.get().getNome());
-        } else {
-            logger.warn("Produto não encontrado para o ID={}", id);
-        }
-
-        return produto;
+        return produtoRepository.findById(id);
     }
 
     public Produto atualizarProduto(UUID id, Produto produtoAtualizado) {
-        logger.info("Atualizando produto com ID={}", id);
-
         Optional<Produto> produtoExistente = buscarProdutoPorId(id);
         if (produtoExistente.isPresent()) {
             Produto produto = produtoExistente.get();
 
-            logger.info("Atualizando informações do produto: Nome={}, Categoria={}, Preço Base={}",
-                    produtoAtualizado.getNome(), produtoAtualizado.getCategoria(), produtoAtualizado.getPrecoBase());
+            Optional<Produto> produtoComMesmoNome = produtoRepository.findByNome(produtoAtualizado.getNome());
+            if (produtoComMesmoNome.isPresent() && !produtoComMesmoNome.get().getId().equals(id)) {
+                logger.warn("Produto com o nome '{}' já existe", produtoAtualizado.getNome());
+                throw new IllegalArgumentException("Produto com o nome '" + produtoAtualizado.getNome() + "' já existe.");
+            }
 
             produto.setNome(produtoAtualizado.getNome());
             produto.setCategoria(produtoAtualizado.getCategoria());
             produto.setPrecoBase(produtoAtualizado.getPrecoBase());
-
             BigDecimal precoTarifado = calculadoraImpostosFactory
                     .getCalculadora(produto.getCategoria())
                     .calcular(produto.getPrecoBase());
-
             produto.setPrecoTarifado(precoTarifado);
-
-            Produto produtoAtualizadoFinal = produtoRepository.save(produto);
-
-            logger.info("Produto atualizado com sucesso: ID={}, Nome={}, Preço Base={}, Preço Tarifado={}",
-                    produtoAtualizadoFinal.getId(), produtoAtualizadoFinal.getNome(),
-                    produtoAtualizadoFinal.getPrecoBase(), produtoAtualizadoFinal.getPrecoTarifado());
-
-            return produtoAtualizadoFinal;
+            return produtoRepository.save(produto);
         }
-
-        logger.error("Erro ao atualizar. Produto com ID={} não encontrado", id);
         throw new RuntimeException("Produto não encontrado");
     }
 }
