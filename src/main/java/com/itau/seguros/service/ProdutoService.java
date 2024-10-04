@@ -3,13 +3,12 @@ package com.itau.seguros.service;
 import com.itau.seguros.dto.ProdutoRequestDTO;
 import com.itau.seguros.model.Produto;
 import com.itau.seguros.repository.ProdutoRepository;
-import com.itau.seguros.service.calculadora.CalculadoraImpostos;
-import com.itau.seguros.service.calculadora.CalculadoraImpostosFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.math.BigDecimal;
 import java.util.Optional;
@@ -22,9 +21,6 @@ public class ProdutoService {
 
     @Autowired
     private ProdutoRepository produtoRepository;
-
-    @Autowired
-    private CalculadoraImpostosFactory calculadoraImpostosFactory;
 
     public Produto salvarProduto(ProdutoRequestDTO produtoRequestDTO) {
         verificarDuplicidade(produtoRequestDTO.getNome());
@@ -41,7 +37,7 @@ public class ProdutoService {
 
     public Produto atualizarProduto(UUID id, ProdutoRequestDTO produtoRequestDTO) {
         Produto produtoExistente = buscarProdutoPorId(id)
-                .orElseThrow(() -> new IllegalArgumentException("Produto com ID " + id + " não encontrado"));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Produto com ID " + id + " não encontrado"));
 
         verificarDuplicidade(produtoRequestDTO.getNome(), id);
 
@@ -51,18 +47,20 @@ public class ProdutoService {
     }
 
     private void verificarDuplicidade(String nome) {
-        if (produtoRepository.findByNome(nome).isPresent()) {
-            logger.warn("Tentativa de criar produto duplicado: Nome={}", nome);
-            throw new DataIntegrityViolationException("Produto com o nome '" + nome + "' já existe.");
-        }
+        produtoRepository.findByNome(nome)
+                .ifPresent(produto -> {
+                    logger.warn("Tentativa de criar produto duplicado: Nome={}", nome);
+                    throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Produto com o nome '" + nome + "' já existe.");
+                });
     }
 
     private void verificarDuplicidade(String nome, UUID id) {
-        Optional<Produto> produtoComMesmoNome = produtoRepository.findByNome(nome);
-        if (produtoComMesmoNome.isPresent() && !produtoComMesmoNome.get().getId().equals(id)) {
-            logger.warn("Produto com o nome '{}' já existe", nome);
-            throw new DataIntegrityViolationException("Produto com o nome '" + nome + "' já existe.");
-        }
+        produtoRepository.findByNome(nome)
+                .filter(produto -> !produto.getId().equals(id))
+                .ifPresent(produto -> {
+                    logger.warn("Produto com o nome '{}' já existe.", nome);
+                    throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Produto com o nome '" + nome + "' já existe.");
+                });
     }
 
     private void aplicarValoresECalcularPreco(Produto produto, ProdutoRequestDTO produtoRequestDTO) {
@@ -70,8 +68,8 @@ public class ProdutoService {
         produto.setCategoria(produtoRequestDTO.getCategoria());
         produto.setPrecoBase(produtoRequestDTO.getPrecoBase());
 
-        CalculadoraImpostos calculadora = calculadoraImpostosFactory.getCalculadora(produto.getCategoria());
-        BigDecimal precoTarifado = calculadora.calcular(produto.getPrecoBase());
+        BigDecimal precoTarifado = CalculadoraImpostos.getCalculadora(produto.getCategoria(), produto.getPrecoBase());
+
         produto.setPrecoTarifado(precoTarifado);
     }
 }

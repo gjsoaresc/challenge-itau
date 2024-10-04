@@ -3,8 +3,6 @@ package com.itau.seguros.service;
 import com.itau.seguros.dto.ProdutoRequestDTO;
 import com.itau.seguros.model.Produto;
 import com.itau.seguros.repository.ProdutoRepository;
-import com.itau.seguros.service.calculadora.CalculadoraImpostos;
-import com.itau.seguros.service.calculadora.CalculadoraImpostosFactory;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
@@ -26,12 +24,6 @@ class ProdutoServiceTest {
     @Mock
     private ProdutoRepository produtoRepository;
 
-    @Mock
-    private CalculadoraImpostosFactory calculadoraImpostosFactory;
-
-    @Mock
-    private CalculadoraImpostos calculadoraImpostos;
-
     @BeforeEach
     void setUp() {
         MockitoAnnotations.openMocks(this);
@@ -50,8 +42,6 @@ class ProdutoServiceTest {
         produtoEsperado.setPrecoBase(new BigDecimal("300.00"));
         produtoEsperado.setPrecoTarifado(new BigDecimal("321.00"));
 
-        when(calculadoraImpostosFactory.getCalculadora("RESIDENCIAL")).thenReturn(calculadoraImpostos);
-        when(calculadoraImpostos.calcular(produtoRequestDTO.getPrecoBase())).thenReturn(new BigDecimal("321.00"));
         when(produtoRepository.save(any(Produto.class))).thenReturn(produtoEsperado);
 
         Produto produtoSalvo = produtoService.salvarProduto(produtoRequestDTO);
@@ -104,8 +94,6 @@ class ProdutoServiceTest {
         produtoAtualizado.setPrecoBase(new BigDecimal("500.00"));
         produtoAtualizado.setPrecoTarifado(new BigDecimal("540.00"));
 
-        when(calculadoraImpostosFactory.getCalculadora("PATRIMONIAL")).thenReturn(calculadoraImpostos);
-        when(calculadoraImpostos.calcular(produtoRequestDTO.getPrecoBase())).thenReturn(new BigDecimal("540.00"));
         when(produtoRepository.findById(id)).thenReturn(Optional.of(produtoExistente));
         when(produtoRepository.save(any(Produto.class))).thenReturn(produtoAtualizado);
 
