@@ -98,6 +98,34 @@ Os testes E2E garantem que o fluxo completo da aplicação funciona conforme o e
 
 Esse comando irá executar os testes E2E configurados para simular o comportamento da aplicação como um todo, incluindo o MongoDB.
 
+## Observabilidade
+
+A aplicação foi configurada com opções de observabilidade, incluindo monitoramento de saúde, métricas e rastreamento distribuído.
+
+### 1. Logs Detalhados
+   Os logs foram otimizados para fornecer informações claras sobre operações de criação, atualização, e busca de produtos. Cada operação registra contextos importantes, como o ID do produto, nome, categoria, e preço tarifado.
+
+Você pode visualizar os logs da aplicação diretamente no console ou usando:
+
+```bash
+docker logs -f seguros
+```
+
+### 2. Monitoramento de Saúde (Health Checks)
+   Foram implementados health checks customizados usando CustomHealthIndicator para monitorar a saúde do MongoDB e de outros componentes críticos da aplicação. Você pode acessar a URL /actuator/health para verificar o status da aplicação:
+
+Endpoint: http://localhost:8080/actuator/health
+
+### 3. Métricas com Prometheus
+   A integração com Micrometer permite coletar métricas da aplicação. O Prometheus está configurado para capturar essas métricas. As métricas podem ser acessadas no endpoint /actuator/prometheus:
+
+Endpoint de métricas: http://localhost:8080/actuator/prometheus
+
+### 5. Documentação da API (Swagger/OpenAPI)
+   A documentação da API é gerada automaticamente com Swagger. Acesse a documentação interativa no seguinte link:
+
+Swagger UI: http://localhost:8080/swagger-ui/index.html
+
 ## Scripts de Execução
 
 - **Iniciar a aplicação**: `./gradlew bootRun`
