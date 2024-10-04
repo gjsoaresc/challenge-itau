@@ -1,5 +1,6 @@
 package com.itau.seguros.dto;
 
+import com.itau.seguros.model.Produto;
 import io.swagger.v3.oas.annotations.media.Schema;
 
 import java.math.BigDecimal;
@@ -22,12 +23,12 @@ public class ProdutoResponseDTO {
     @Schema(description = "Preço tarifado após aplicação dos impostos", example = "103.20")
     private BigDecimal precoTarifado;
 
-    public ProdutoResponseDTO(UUID id, String nome, String categoria, BigDecimal precoBase, BigDecimal precoTarifado) {
-        this.id = id;
-        this.nome = nome;
-        this.categoria = categoria;
-        this.precoBase = precoBase;
-        this.precoTarifado = precoTarifado;
+    public ProdutoResponseDTO(Produto produto) {
+        this.id = produto.getId();
+        this.nome = produto.getNome();
+        this.categoria = produto.getCategoria();
+        this.precoBase = produto.getPrecoBase();
+        this.precoTarifado = produto.getPrecoTarifado();
     }
 
     public UUID getId() {
@@ -68,5 +69,9 @@ public class ProdutoResponseDTO {
 
     public void setPrecoTarifado(BigDecimal precoTarifado) {
         this.precoTarifado = precoTarifado;
+    }
+
+    public static ProdutoResponseDTO fromProduto(Produto produto) {
+        return new ProdutoResponseDTO(produto);
     }
 }

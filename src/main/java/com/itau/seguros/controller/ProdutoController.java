@@ -50,7 +50,7 @@ public class ProdutoController {
 
         try {
             Produto produtoSalvo = produtoService.salvarProduto(produtoRequestDTO);
-            return ResponseEntity.ok(converterParaDTO(produtoSalvo));
+            return ResponseEntity.ok(ProdutoResponseDTO.fromProduto(produtoSalvo));
         } catch (Exception e) {
             logger.error("Erro ao salvar o produto: {}", e.getMessage());
             return ResponseEntity.badRequest().body(e.getMessage());
@@ -69,7 +69,7 @@ public class ProdutoController {
         logger.info("Recebida solicitação de busca do produto com ID={}", id);
 
         return produtoService.buscarProdutoPorId(id)
-                .map(produto -> ResponseEntity.ok(converterParaDTO(produto)))
+                .map(produto -> ResponseEntity.ok(ProdutoResponseDTO.fromProduto(produto)))
                 .orElseGet(() -> {
                     logger.warn("Produto com ID={} não encontrado", id);
                     return ResponseEntity.notFound().build();
@@ -94,7 +94,7 @@ public class ProdutoController {
 
         try {
             Produto produtoAtualizado = produtoService.atualizarProduto(id, produtoRequestDTO);
-            return ResponseEntity.ok(converterParaDTO(produtoAtualizado));
+            return ResponseEntity.ok(ProdutoResponseDTO.fromProduto(produtoAtualizado));
         } catch (IllegalArgumentException e) {
             logger.warn(e.getMessage());
             return ResponseEntity.badRequest().body(e.getMessage());
@@ -113,15 +113,5 @@ public class ProdutoController {
             );
         }
         return null;
-    }
-
-    private ProdutoResponseDTO converterParaDTO(Produto produto) {
-        return new ProdutoResponseDTO(
-                produto.getId(),
-                produto.getNome(),
-                produto.getCategoria(),
-                produto.getPrecoBase(),
-                produto.getPrecoTarifado()
-        );
     }
 }
