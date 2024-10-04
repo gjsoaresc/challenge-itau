@@ -12,27 +12,6 @@ As principais operações disponíveis na API incluem:
 
 Este projeto foi desenvolvido aplicando as melhores práticas de arquitetura e desenvolvimento, como Clean Architecture e princípios SOLID.
 
-## Boas Práticas Aplicadas
-
-O projeto segue várias boas práticas para garantir escalabilidade, manutenção e confiabilidade:
-
-1. **Princípios SOLID**:
-    - Cada classe e método tem uma responsabilidade única.
-    - A injeção de dependência é utilizada em todo o projeto, garantindo o baixo acoplamento entre os componentes.
-
-2. **Clean Architecture**:
-    - O projeto segue uma arquitetura limpa, separando claramente as responsabilidades entre controladores, serviços e repositórios.
-    - A lógica de negócios é mantida nas classes de serviço, enquanto o gerenciamento de dados ocorre na camada de repositórios.
-
-3. **Documentação com Swagger (OpenAPI)**:
-    - A API é completamente documentada usando anotações do **Springdoc OpenAPI** para fornecer descrições detalhadas de cada endpoint, incluindo a estrutura das requisições e respostas.
-    - A documentação da API está disponível em `/swagger-ui.html` após a execução da aplicação.
-
-4. **Testes Automatizados**:
-    - Testes unitários e de integração garantem a correta funcionalidade da aplicação.
-    - Testes de contrato garantem que a API respeite o contrato definido para a comunicação entre serviços.
-    - Testes E2E verificam o comportamento da aplicação como um todo.
-
 ## Instalação e Execução do Projeto
 
 ### Pré-requisitos
@@ -133,6 +112,27 @@ Swagger UI: http://localhost:8080/swagger-ui/index.html
 - **Rodar testes de contrato**: `./gradlew contractTest`
 - **Rodar testes E2E**: `./gradlew e2eTest`
 - **Subir o MongoDB com Docker Compose**: `docker-compose up -d`
+
+## Boas Práticas Aplicadas
+
+O projeto segue várias boas práticas para garantir escalabilidade, manutenção e confiabilidade:
+
+1. **Princípios SOLID**:
+   - Cada classe e método tem uma responsabilidade única.
+   - A injeção de dependência é utilizada em todo o projeto, garantindo o baixo acoplamento entre os componentes.
+
+2. **Clean Architecture**:
+   - O projeto segue uma arquitetura limpa, separando claramente as responsabilidades entre controladores, serviços e repositórios.
+   - A lógica de negócios é mantida nas classes de serviço, enquanto o gerenciamento de dados ocorre na camada de repositórios.
+
+3. **Documentação com Swagger (OpenAPI)**:
+   - A API é completamente documentada usando anotações do **Springdoc OpenAPI** para fornecer descrições detalhadas de cada endpoint, incluindo a estrutura das requisições e respostas.
+   - A documentação da API está disponível em `/swagger-ui.html` após a execução da aplicação.
+
+4. **Testes Automatizados**:
+   - Testes unitários e de integração garantem a correta funcionalidade da aplicação.
+   - Testes de contrato garantem que a API respeite o contrato definido para a comunicação entre serviços.
+   - Testes E2E verificam o comportamento da aplicação como um todo.
 
 ## Considerações Finais
 
